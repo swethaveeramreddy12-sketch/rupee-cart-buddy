@@ -29,3 +29,49 @@ export const products: Product[] = [
 
 export const formatINR = (n: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+
+// Deterministic random helpers so the same query always yields the same items.
+function hash(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function seeded(seed: number) {
+  let s = seed || 1;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 0xffffffff;
+  };
+}
+
+const ADJ = ["Premium", "Classic", "Luxury", "Smart", "Eco", "Ultra", "Pro", "Deluxe"];
+const SUF = ["Edition", "Pack", "Set", "Collection", "Bundle", "Series"];
+
+/**
+ * Build a list of placeholder products for any search query.
+ * Images come from Unsplash's keyword-based source URL (no API key required).
+ */
+export function generateProductsForQuery(query: string, count = 8): Product[] {
+  const q = query.trim();
+  if (!q) return [];
+  const rand = seeded(hash(q.toLowerCase()));
+  const cleanQ = q.replace(/[^a-zA-Z0-9 ]/g, "").trim() || "product";
+  const slug = cleanQ.toLowerCase().replace(/\s+/g, "-");
+  const titleQ = cleanQ.replace(/\b\w/g, (c) => c.toUpperCase());
+
+  return Array.from({ length: count }, (_, i) => {
+    const adj = ADJ[Math.floor(rand() * ADJ.length)];
+    const suf = SUF[Math.floor(rand() * SUF.length)];
+    const price = Math.floor(499 + rand() * 4500);
+    return {
+      id: `q-${slug}-${i}`,
+      name: `${adj} ${titleQ} ${suf}`.toUpperCase(),
+      price,
+      image: `https://source.unsplash.com/640x640/?${encodeURIComponent(cleanQ)}&sig=${hash(slug + i)}`,
+      description: `${adj} quality ${cleanQ} — handpicked just for your search.`,
+    };
+  });
+}
