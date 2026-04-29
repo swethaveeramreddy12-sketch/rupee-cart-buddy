@@ -23,6 +23,7 @@ export function Header() {
           <a href="#products" className="hover:text-[var(--brand)]">OUR PRODUCTS</a>
           <a href="#contact" className="hover:text-[var(--brand)]">CONTACT US</a>
           <a href="#about" className="hover:text-[var(--brand)]">ABOUT US</a>
+          <Link to="/dashboard" className="hover:text-[var(--brand)]">DASHBOARD</Link>
         </nav>
         <button
           onClick={() => setOpen(true)}
