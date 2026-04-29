@@ -32,14 +32,18 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "shoPperz" },
+      { name: "description", content: "Indian Shopper Pro is an e-commerce application for browsing and purchasing Indian products." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "shoPperz" },
+      { property: "og:description", content: "Indian Shopper Pro is an e-commerce application for browsing and purchasing Indian products." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "shoPperz" },
+      { name: "twitter:description", content: "Indian Shopper Pro is an e-commerce application for browsing and purchasing Indian products." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e63b12f0-226b-4165-be8e-b50e67a6ed38/id-preview-c678d374--83765769-0391-494d-a2e6-474e2d1107fd.lovable.app-1777445718192.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e63b12f0-226b-4165-be8e-b50e67a6ed38/id-preview-c678d374--83765769-0391-494d-a2e6-474e2d1107fd.lovable.app-1777445718192.png" },
     ],
     links: [
       {
