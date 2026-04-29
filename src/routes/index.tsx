@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { products, formatINR } from "@/lib/products";
+import { products, formatINR, generateProductsForQuery } from "@/lib/products";
 import { useCart } from "@/lib/cart";
 import { ShoppingCart, Search as SearchIcon } from "lucide-react";
 import { useSearchQuery } from "@/lib/search";
@@ -18,7 +18,7 @@ function Index() {
   const { add, setOpen } = useCart();
   const { query, setQuery } = useSearchQuery();
   const q = query.trim().toLowerCase();
-  // Always show every product. If user searches, matches come first.
+  // Local matches first, then generated "any-product" results for the query.
   const matches = q
     ? products.filter(
         (p) =>
@@ -26,8 +26,8 @@ function Index() {
           p.description.toLowerCase().includes(q),
       )
     : [];
-  const rest = q ? products.filter((p) => !matches.includes(p)) : products;
-  const filtered = [...matches, ...rest];
+  const generated = q ? generateProductsForQuery(query, 8) : [];
+  const filtered = q ? [...matches, ...generated] : products;
   return (
     <main className="min-h-screen bg-white">
       {/* Hero */}
@@ -49,7 +49,7 @@ function Index() {
       </h1>
       <p className="mx-auto max-w-7xl px-6 pb-4 text-gray-600">
         {q
-          ? `${matches.length} match${matches.length === 1 ? "" : "es"} — showing all products below`
+          ? `${filtered.length} result${filtered.length === 1 ? "" : "s"} for “${query}”`
           : "Shop the latest at unbeatable prices."}
       </p>
 
