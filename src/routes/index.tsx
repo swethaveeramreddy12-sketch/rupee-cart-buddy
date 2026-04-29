@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { products, formatINR } from "@/lib/products";
 import { useCart } from "@/lib/cart";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Search as SearchIcon } from "lucide-react";
+import { useSearchQuery } from "@/lib/search";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -15,6 +16,15 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { add, setOpen } = useCart();
+  const { query, setQuery } = useSearchQuery();
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? products.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q),
+      )
+    : products;
   return (
     <main className="min-h-screen bg-white">
       {/* Hero */}
@@ -31,11 +41,29 @@ function Index() {
         />
       </section>
 
-      <h1 className="mx-auto max-w-7xl px-6 pt-8 text-3xl font-bold tracking-tight">Our Products</h1>
-      <p className="mx-auto max-w-7xl px-6 pb-6 text-gray-600">Shop the latest at unbeatable prices.</p>
+      <h1 className="mx-auto max-w-7xl px-6 pt-8 text-3xl font-bold tracking-tight">
+        {q ? `Results for "${query}"` : "Our Products"}
+      </h1>
+      <p className="mx-auto max-w-7xl px-6 pb-4 text-gray-600">
+        {q ? `${filtered.length} item${filtered.length === 1 ? "" : "s"} found` : "Shop the latest at unbeatable prices."}
+      </p>
+
+      {/* Mobile search */}
+      <div className="mx-auto mb-4 flex max-w-7xl items-center gap-2 rounded border bg-white px-3 py-2 md:hidden mx-4">
+        <SearchIcon className="h-4 w-4 opacity-60" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search products…"
+          className="flex-1 bg-transparent text-sm outline-none"
+        />
+        {query && (
+          <button onClick={() => setQuery("")} className="text-xs text-gray-500">clear</button>
+        )}
+      </div>
 
       <section id="products" className="mx-auto grid max-w-7xl grid-cols-2 gap-4 px-4 pb-16 sm:grid-cols-3 lg:grid-cols-4">
-        {products.map((p) => (
+        {filtered.map((p) => (
           <article key={p.id} className="group flex flex-col overflow-hidden rounded-lg border bg-white shadow-sm transition hover:shadow-lg">
             <div className="aspect-square overflow-hidden bg-gray-100">
               <img src={p.image} alt={p.name} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
@@ -55,6 +83,14 @@ function Index() {
             </div>
           </article>
         ))}
+        {filtered.length === 0 && (
+          <div className="col-span-full rounded-lg border border-dashed bg-gray-50 p-10 text-center">
+            <p className="font-semibold">No products matched "{query}"</p>
+            <button onClick={() => setQuery("")} className="mt-3 rounded bg-black px-5 py-2 text-sm font-bold text-white">
+              Clear search
+            </button>
+          </div>
+        )}
       </section>
 
       <footer id="contact" className="bg-black py-10 text-center text-sm text-white/70">
