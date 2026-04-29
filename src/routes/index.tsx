@@ -18,13 +18,16 @@ function Index() {
   const { add, setOpen } = useCart();
   const { query, setQuery } = useSearchQuery();
   const q = query.trim().toLowerCase();
-  const filtered = q
+  // Always show every product. If user searches, matches come first.
+  const matches = q
     ? products.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||
           p.description.toLowerCase().includes(q),
       )
-    : products;
+    : [];
+  const rest = q ? products.filter((p) => !matches.includes(p)) : products;
+  const filtered = [...matches, ...rest];
   return (
     <main className="min-h-screen bg-white">
       {/* Hero */}
@@ -45,7 +48,9 @@ function Index() {
         {q ? `Results for "${query}"` : "Our Products"}
       </h1>
       <p className="mx-auto max-w-7xl px-6 pb-4 text-gray-600">
-        {q ? `${filtered.length} item${filtered.length === 1 ? "" : "s"} found` : "Shop the latest at unbeatable prices."}
+        {q
+          ? `${matches.length} match${matches.length === 1 ? "" : "es"} — showing all products below`
+          : "Shop the latest at unbeatable prices."}
       </p>
 
       {/* Mobile search */}
@@ -83,14 +88,6 @@ function Index() {
             </div>
           </article>
         ))}
-        {filtered.length === 0 && (
-          <div className="col-span-full rounded-lg border border-dashed bg-gray-50 p-10 text-center">
-            <p className="font-semibold">No products matched "{query}"</p>
-            <button onClick={() => setQuery("")} className="mt-3 rounded bg-black px-5 py-2 text-sm font-bold text-white">
-              Clear search
-            </button>
-          </div>
-        )}
       </section>
 
       <footer id="contact" className="bg-black py-10 text-center text-sm text-white/70">
