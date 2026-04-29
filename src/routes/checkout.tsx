@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import { formatINR } from "@/lib/products";
-import { CreditCard, Lock } from "lucide-react";
+import { CreditCard, Lock, Truck, Smartphone } from "lucide-react";
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
@@ -18,6 +18,8 @@ function CheckoutPage() {
   const { items, total, clear } = useCart();
   const navigate = useNavigate();
   const [processing, setProcessing] = useState(false);
+  const [method, setMethod] = useState<"card" | "phonepe" | "cod">("card");
+  const [phoneUpi, setPhoneUpi] = useState("");
   const [form, setForm] = useState({
     name: "", email: "", address: "", city: "", pincode: "",
     card: "", expiry: "", cvv: "",
@@ -31,8 +33,8 @@ function CheckoutPage() {
     setProcessing(true);
     setTimeout(() => {
       clear();
-      navigate({ to: "/success" });
-    }, 1500);
+      navigate({ to: "/success", search: { method } });
+    }, method === "cod" ? 800 : 1500);
   };
 
   if (items.length === 0 && !processing) {
@@ -64,11 +66,66 @@ function CheckoutPage() {
             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
               <CreditCard className="h-5 w-5" /> Payment Details
             </h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input required placeholder="Card number" maxLength={19} value={form.card} onChange={update("card")} className="rounded border px-3 py-2 sm:col-span-2" />
-              <input required placeholder="MM/YY" value={form.expiry} onChange={update("expiry")} className="rounded border px-3 py-2" />
-              <input required placeholder="CVV" maxLength={4} value={form.cvv} onChange={update("cvv")} className="rounded border px-3 py-2" />
+
+            <div className="mb-4 grid gap-2 sm:grid-cols-3">
+              {[
+                { id: "card", label: "Card", icon: CreditCard },
+                { id: "phonepe", label: "PhonePe / UPI", icon: Smartphone },
+                { id: "cod", label: "Cash on Delivery", icon: Truck },
+              ].map((opt) => {
+                const Icon = opt.icon;
+                const active = method === opt.id;
+                return (
+                  <button
+                    type="button"
+                    key={opt.id}
+                    onClick={() => setMethod(opt.id as typeof method)}
+                    className={`flex flex-col items-center justify-center gap-1 rounded-lg border-2 px-3 py-3 text-sm font-medium transition ${
+                      active ? "border-black bg-gray-50" : "border-gray-200 hover:border-gray-400"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    {opt.label}
+                  </button>
+                );
+              })}
             </div>
+
+            {method === "card" && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input required placeholder="Card number" maxLength={19} value={form.card} onChange={update("card")} className="rounded border px-3 py-2 sm:col-span-2" />
+                <input required placeholder="MM/YY" value={form.expiry} onChange={update("expiry")} className="rounded border px-3 py-2" />
+                <input required placeholder="CVV" maxLength={4} value={form.cvv} onChange={update("cvv")} className="rounded border px-3 py-2" />
+              </div>
+            )}
+
+            {method === "phonepe" && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 rounded-lg bg-purple-50 p-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-full bg-[#5f259f] text-white font-bold">P</div>
+                  <div className="text-sm">
+                    <p className="font-semibold">Pay with PhonePe</p>
+                    <p className="text-xs text-gray-600">Enter your UPI ID or PhonePe number</p>
+                  </div>
+                </div>
+                <input
+                  required
+                  placeholder="yourname@ybl  or  9876543210"
+                  value={phoneUpi}
+                  onChange={(e) => setPhoneUpi(e.target.value)}
+                  className="w-full rounded border px-3 py-2"
+                />
+                <p className="text-xs text-gray-500">A payment request will be sent to your PhonePe app.</p>
+              </div>
+            )}
+
+            {method === "cod" && (
+              <div className="rounded-lg border border-dashed bg-amber-50 p-4 text-sm">
+                <p className="font-semibold">Pay {formatINR(total)} in cash when your order arrives.</p>
+                <p className="mt-1 text-xs text-gray-600">Please keep exact change ready. An OTP will be required at the time of delivery.</p>
+              </div>
+            )}
+
             <p className="mt-3 flex items-center gap-1 text-xs text-gray-500">
               <Lock className="h-3 w-3" /> Demo checkout — no real payment processed.
             </p>
@@ -79,7 +136,13 @@ function CheckoutPage() {
             disabled={processing}
             className="w-full rounded bg-black py-4 font-bold text-white transition hover:bg-gray-800 disabled:opacity-60"
           >
-            {processing ? "Processing payment…" : `Pay ${formatINR(total)}`}
+            {processing
+              ? method === "cod" ? "Placing order…" : "Processing payment…"
+              : method === "cod"
+                ? `Place Order — ${formatINR(total)}`
+                : method === "phonepe"
+                  ? `Pay with PhonePe — ${formatINR(total)}`
+                  : `Pay ${formatINR(total)}`}
           </button>
         </form>
 
