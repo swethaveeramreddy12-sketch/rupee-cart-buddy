@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ShoppingCart, Search } from "lucide-react";
+import { ShoppingCart, Search, LayoutDashboard } from "lucide-react";
 import { useCart } from "@/lib/cart";
 
 export function Header() {
@@ -25,6 +25,13 @@ export function Header() {
           <a href="#about" className="hover:text-[var(--brand)]">ABOUT US</a>
           <Link to="/dashboard" className="hover:text-[var(--brand)]">DASHBOARD</Link>
         </nav>
+        <Link
+          to="/dashboard"
+          className="rounded-full p-2 hover:bg-white/10"
+          aria-label="Open dashboard"
+        >
+          <LayoutDashboard className="h-5 w-5" />
+        </Link>
         <button
           onClick={() => setOpen(true)}
           className="relative rounded-full p-2 hover:bg-white/10"
