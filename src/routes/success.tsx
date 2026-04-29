@@ -5,7 +5,6 @@ export const Route = createFileRoute("/success")({
   component: SuccessPage,
   validateSearch: (s: Record<string, unknown>) => ({
     method: (s.method as "card" | "phonepe" | "cod" | undefined) ?? "card",
-    id: (s.id as string | undefined) ?? "",
   }),
   head: () => ({
     meta: [
@@ -16,8 +15,8 @@ export const Route = createFileRoute("/success")({
 });
 
 function SuccessPage() {
-  const { method, id } = Route.useSearch();
-  const orderId = id || "SHP" + Math.floor(100000 + Math.random() * 900000);
+  const { method } = Route.useSearch();
+  const orderId = "SHP" + Math.floor(100000 + Math.random() * 900000);
   const isCod = method === "cod";
   const title = isCod ? "Order Placed!" : "Payment Successful!";
   const subtitle = isCod
