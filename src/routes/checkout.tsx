@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import { formatINR } from "@/lib/products";
 import { CreditCard, Lock, Truck, Smartphone } from "lucide-react";
+import { saveOrder, newOrderId } from "@/lib/orders";
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
@@ -31,9 +32,27 @@ function CheckoutPage() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setProcessing(true);
+    const id = newOrderId();
+    const orderItems = items;
+    const orderTotal = total;
     setTimeout(() => {
+      saveOrder({
+        id,
+        createdAt: Date.now(),
+        items: orderItems,
+        total: orderTotal,
+        method,
+        customer: {
+          name: form.name,
+          email: form.email,
+          address: form.address,
+          city: form.city,
+          pincode: form.pincode,
+        },
+        status: "Placed",
+      });
       clear();
-      navigate({ to: "/success", search: { method } });
+      navigate({ to: "/success", search: { method, id } });
     }, method === "cod" ? 800 : 1500);
   };
 
