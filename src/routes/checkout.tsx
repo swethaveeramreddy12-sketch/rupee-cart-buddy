@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import { formatINR } from "@/lib/products";
-import { saveOrder } from "@/lib/orders";
 import { CreditCard, Lock, Truck, Smartphone } from "lucide-react";
 
 export const Route = createFileRoute("/checkout")({
@@ -32,27 +31,9 @@ function CheckoutPage() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setProcessing(true);
-    const orderId = "SHP" + Math.floor(100000 + Math.random() * 900000);
-    saveOrder({
-      id: orderId,
-      date: new Date().toISOString(),
-      customer: {
-        name: form.name,
-        email: form.email,
-        address: form.address,
-        city: form.city,
-        pincode: form.pincode,
-      },
-      items: items.map((i) => ({
-        id: i.id, name: i.name, price: i.price, qty: i.qty, image: i.image,
-      })),
-      total,
-      method,
-      status: "pending",
-    });
     setTimeout(() => {
       clear();
-      navigate({ to: "/success", search: { method, id: orderId } });
+      navigate({ to: "/success", search: { method } });
     }, method === "cod" ? 800 : 1500);
   };
 
