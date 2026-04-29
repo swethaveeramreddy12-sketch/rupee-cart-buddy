@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Package, ShoppingBag, LayoutDashboard, Receipt, User, Home, LogOut } from "lucide-react";
-import { getOrders, type Order } from "@/lib/orders";
+import { Package, ShoppingBag, LayoutDashboard, Receipt, User, Home, LogOut, ClipboardCheck, Box, Truck, Bike, CheckCircle2 } from "lucide-react";
+import { getOrders, type Order, TRACK_STEPS, currentStepIndex, progressPercent, etaLabel } from "@/lib/orders";
 import { formatINR } from "@/lib/products";
 
 export const Route = createFileRoute("/dashboard")({
@@ -20,8 +20,15 @@ function methodLabel(m: Order["method"]) {
 
 function DashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [section, setSection] = useState<"overview" | "orders" | "profile">("overview");
+  const [section, setSection] = useState<"overview" | "orders" | "tracker" | "profile">("overview");
   useEffect(() => setOrders(getOrders()), []);
+
+  // Tick every second so the tracker progresses live.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setTick((x) => x + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   const totalSpent = orders.reduce((s, o) => s + o.total, 0);
   const itemsBought = orders.reduce((s, o) => s + o.items.reduce((q, i) => q + i.qty, 0), 0);
@@ -30,6 +37,7 @@ function DashboardPage() {
   const navItems = [
     { id: "overview" as const, label: "Overview", icon: LayoutDashboard },
     { id: "orders" as const, label: "Orders", icon: Receipt },
+    { id: "tracker" as const, label: "Track Order", icon: Truck },
     { id: "profile" as const, label: "Profile", icon: User },
   ];
 
@@ -112,8 +120,7 @@ function DashboardPage() {
             </div>
             {latest ? (
               <div className="rounded-lg border bg-white p-5">
-                <p className="mb-3 text-sm font-semibold text-gray-500">Latest Order</p>
-                <div className="flex items-center justify-between">
+                <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Package className="h-5 w-5 text-gray-500" />
                     <div>
@@ -125,6 +132,7 @@ function DashboardPage() {
                   </div>
                   <p className="text-lg font-bold">{formatINR(latest.total)}</p>
                 </div>
+                <OrderTracker order={latest} />
               </div>
             ) : (
               <EmptyState />
@@ -153,12 +161,11 @@ function DashboardPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                          {o.status}
-                        </span>
+                        <StatusPill order={o} />
                         <p className="text-lg font-bold">{formatINR(o.total)}</p>
                       </div>
                     </div>
+                    <OrderTracker order={o} compact />
                     <ul className="divide-y border-t">
                       {o.items.map((i) => (
                         <li key={i.id} className="flex items-center gap-3 py-2">
@@ -171,6 +178,31 @@ function DashboardPage() {
                         </li>
                       ))}
                     </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {section === "tracker" && (
+          <>
+            <h1 className="mb-2 text-3xl font-bold">Track Order</h1>
+            <p className="mb-6 text-sm text-gray-600">Live status of all your orders.</p>
+            {orders.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <div className="space-y-6">
+                {orders.map((o) => (
+                  <div key={o.id} className="rounded-lg border bg-white p-5">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="font-mono text-sm font-bold">{o.id}</p>
+                        <p className="text-xs text-gray-500">{etaLabel(o)}</p>
+                      </div>
+                      <StatusPill order={o} />
+                    </div>
+                    <OrderTracker order={o} />
                   </div>
                 ))}
               </div>
@@ -218,6 +250,68 @@ function EmptyState() {
       <Link to="/" className="mt-4 inline-block rounded bg-black px-6 py-2 text-sm font-bold text-white">
         Start Shopping
       </Link>
+    </div>
+  );
+}
+
+const STEP_ICONS = [ClipboardCheck, Box, Package, Bike, CheckCircle2];
+
+function StatusPill({ order }: { order: Order }) {
+  const idx = currentStepIndex(order);
+  const label = TRACK_STEPS[idx];
+  const done = idx === TRACK_STEPS.length - 1;
+  return (
+    <span
+      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+        done ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
+
+function OrderTracker({ order, compact = false }: { order: Order; compact?: boolean }) {
+  const idx = currentStepIndex(order);
+  const pct = progressPercent(order);
+  return (
+    <div className={compact ? "mb-3" : "mt-2"}>
+      <div className="relative mb-3 h-1.5 w-full rounded-full bg-gray-200">
+        <div
+          className="absolute left-0 top-0 h-full rounded-full bg-green-500 transition-all duration-500"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <ol className="grid grid-cols-5 gap-1 text-center">
+        {TRACK_STEPS.map((step, i) => {
+          const Icon = STEP_ICONS[i];
+          const reached = i <= idx;
+          const active = i === idx;
+          return (
+            <li key={step} className="flex flex-col items-center gap-1">
+              <div
+                className={`grid h-8 w-8 place-items-center rounded-full border-2 transition ${
+                  reached
+                    ? "border-green-500 bg-green-500 text-white"
+                    : "border-gray-300 bg-white text-gray-400"
+                } ${active ? "ring-2 ring-green-200" : ""}`}
+              >
+                <Icon className="h-4 w-4" />
+              </div>
+              <span
+                className={`text-[10px] leading-tight sm:text-xs ${
+                  reached ? "font-semibold text-gray-800" : "text-gray-400"
+                }`}
+              >
+                {step}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+      {!compact && (
+        <p className="mt-3 text-center text-xs text-gray-500">{etaLabel(order)}</p>
+      )}
     </div>
   );
 }
