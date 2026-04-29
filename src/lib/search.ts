@@ -1,11 +1,5 @@
-import { create } from "zustand";
+import { useEffect, useReducer } from "react";
 
-type SearchState = {
-  query: string;
-  setQuery: (q: string) => void;
-};
-
-// Tiny store without external deps
 let _query = "";
 const listeners = new Set<() => void>();
 
@@ -24,8 +18,3 @@ export function useSearchQuery() {
     },
   };
 }
-
-import { useEffect, useReducer } from "react";
-export type { SearchState };
-// Note: zustand import above is unused; harmless tree-shake.
-export { create };
